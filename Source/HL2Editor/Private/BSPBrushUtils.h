@@ -4,6 +4,8 @@
 #include "MeshDescription.h"
 #include "Materials/MaterialInterface.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogBSPBrushUtils, Log, All);
+
 struct FBSPBrushSide
 {
 	FPlane4f Plane;

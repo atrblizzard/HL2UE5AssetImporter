@@ -29,6 +29,7 @@ void FUtilMenuCommands::RegisterCommands()
 	UI_COMMAND(ConvertSkyboxes, "Convert Skyboxes", "Converts all skybox textures into cubemaps.", EUserInterfaceActionType::Button, FInputGesture());
 
 	UI_COMMAND(ImportBSP, "Import BSP", "Imports a BSP map to the currently open level.", EUserInterfaceActionType::Button, FInputGesture());
+	UI_COMMAND(ImportBSPOnly, "Import BSP Geometry", "Imports a BSP map to the currently open level.", EUserInterfaceActionType::Button, FInputGesture());
 
 	UI_COMMAND(TraceTerrain, "Trace Terrain", "Attempts to map an unreal landscape to world geometry.", EUserInterfaceActionType::Button, FInputGesture());
 }

@@ -33,8 +33,12 @@ public:
 	/* Imports the entire BSP map into the currently opened level. */
 	bool ImportToCurrentLevel();
 
+	bool ImportGeometryToCurrentLevel();
+
 	/* Imports the entire BSP map into the target world. */
 	bool ImportAllToWorld(UWorld* targetWorld);
+
+	bool ImportOnlyGeometryToWorld(UWorld* targetWorld);
 
 	/* Imports geometry only into the target world. */
 	bool ImportGeometryToWorld(UWorld* targetWorld);

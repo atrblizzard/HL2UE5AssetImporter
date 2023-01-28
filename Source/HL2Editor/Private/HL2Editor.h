@@ -51,6 +51,7 @@ private:
 	void ImportScriptsClicked();
 	void ConvertSkyboxes();
 	void ImportBSPClicked();
+	void ImportBSPOnlyClicked();
 	void TraceTerrainClicked();
 
 	void SaveImportedAssets(TArrayView<UObject*> importedObjects);

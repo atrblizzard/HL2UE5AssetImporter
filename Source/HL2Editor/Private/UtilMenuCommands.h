@@ -20,6 +20,7 @@ public:
 	TSharedPtr<FUICommandInfo> ConvertSkyboxes;
 
 	TSharedPtr<FUICommandInfo> ImportBSP;
+	TSharedPtr<FUICommandInfo> ImportBSPOnly;
 
 	TSharedPtr<FUICommandInfo> TraceTerrain;
 };

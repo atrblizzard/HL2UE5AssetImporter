@@ -58,6 +58,9 @@ void FEntityEmitter::GenerateActors(const TArrayView<FHL2EntityData>& entityData
 	importCountMap.Empty();
 	for (const FHL2EntityData& entityData : entityDatas)
 	{
+		if (progress->ShouldCancel())
+			break;
+
 		progress->EnterProgressFrame();
 
 		// Skip duplicate light_environment

@@ -69,19 +69,42 @@ bool FBSPImporter::ImportToCurrentLevel()
 	return ImportAllToWorld(GEditor->GetEditorWorldContext().World());
 }
 
+bool FBSPImporter::ImportGeometryToCurrentLevel()
+{
+	UE_LOG(LogHL2BSPImporter, Log, TEXT("Importing map '%s' to current level"), *bspFileName);
+	return ImportOnlyGeometryToWorld(GEditor->GetEditorWorldContext().World());
+}
+
 bool FBSPImporter::ImportAllToWorld(UWorld* targetWorld)
 {
 	FScopedSlowTask loopProgress(2, LOCTEXT("MapImporting", "Importing map..."));
-	loopProgress.MakeDialog();
+	loopProgress.MakeDialog(true);
 
 	loopProgress.EnterProgressFrame(1.0f);
 	if (!ImportGeometryToWorld(targetWorld)) { return false; }
+
+	if (loopProgress.ShouldCancel())
+		return false;
 
 	loopProgress.EnterProgressFrame(1.0f);
 	if (!ImportEntitiesToWorld(targetWorld)) { return false; }
 
 	//loopProgress.EnterProgressFrame(1.0f);
 	//if (!ImportBrushesToWorld(targetWorld)) { return false; }
+
+	return true;
+}
+
+bool FBSPImporter::ImportOnlyGeometryToWorld(UWorld* targetWorld)
+{
+	FScopedSlowTask loopProgress(1, LOCTEXT("MapImporting", "Importing map..."));
+	loopProgress.MakeDialog(true);
+
+	if (loopProgress.ShouldCancel())
+		return false;
+
+	loopProgress.EnterProgressFrame(1.0f);
+	if (!ImportGeometryToWorld(targetWorld)) { return false; }
 
 	return true;
 }
@@ -246,7 +269,7 @@ void FBSPImporter::RenderModelToActors(TArray<AStaticMeshActor*>& out, uint32 mo
 	const FBox3f bspBounds = GetNodeBounds(bspNode, true);
 
 	FScopedSlowTask progress(modelIndex == 0 ? 6 : 5, LOCTEXT("MapGeometryImporting", "Importing map geometry..."));
-	progress.MakeDialog();
+	progress.MakeDialog(true);
 
 	// Render out VBSPInfo
 	//progress.EnterProgressFrame(1.0f, LOCTEXT("MapGeometryImporting_VBSPINFO", "Generating VBSPInfo..."));
@@ -256,6 +279,9 @@ void FBSPImporter::RenderModelToActors(TArray<AStaticMeshActor*>& out, uint32 mo
 	TArray<uint16> brushes;
 	TArray<uint16> displacements;
 	{
+		if (progress.ShouldCancel())
+			return;
+
 		progress.EnterProgressFrame(1.0f, LOCTEXT("MapGeometryImporting_GATHER", "Gathering faces and displacements..."));
 
 		// Gather all faces and displacements from tree
@@ -1428,6 +1454,14 @@ FString FBSPImporter::ParseMaterialName(const char* bspMaterialName)
 		if (matchWVTMaterial.FindNext())
 		{
 			bspMaterialNameAsStr = matchWVTMaterial.GetCaptureGroup(1);
+		}
+	}
+	{
+		const static FRegexPattern patternMapMaterial(TEXT("^maps[\\\\\\/]\\w+[\\\\\\/](.+)$"));
+		FRegexMatcher matchMapMaterial(patternMapMaterial, bspMaterialNameAsStr);
+		if (matchMapMaterial.FindNext())
+		{
+			bspMaterialNameAsStr = matchMapMaterial.GetCaptureGroup(1);
 		}
 	}
 	return bspMaterialNameAsStr;

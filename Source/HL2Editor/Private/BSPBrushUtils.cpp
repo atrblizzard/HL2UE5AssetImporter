@@ -7,6 +7,8 @@
 #include "SourceCoord.h"
 #include "MeshUtils.h"
 
+DEFINE_LOG_CATEGORY(LogBSPBrushUtils);
+
 constexpr float snapThreshold = 1.0f / 4.0f;
 
 FBSPBrushUtils::FBSPBrushUtils()
@@ -40,6 +42,8 @@ void FBSPBrushUtils::BuildBrushGeometry(const FBSPBrush& brush, FMeshDescription
 		const bool textureUVValid = FMath::Abs(FVector3f::DotProduct(textureNorm, side.Plane)) >= 0.1f;
 		if (side.Material != fnBlack && !textureUVValid && !alwaysEmitFaces) { continue; }
 		const FName material = overrideMaterial != NAME_None ? overrideMaterial : !textureUVValid ? fnBlack : side.Material;
+
+		UE_LOG(LogBSPBrushUtils, Log, TEXT("Iterating material %s while mapping brushes."), *material.ToString());
 
 		// Create a poly for this side
 		FPoly poly = FPoly::BuildInfiniteFPoly((FPlane)side.Plane);
