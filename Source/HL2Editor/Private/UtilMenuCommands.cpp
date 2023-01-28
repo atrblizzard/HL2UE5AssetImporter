@@ -4,7 +4,13 @@
 #include "LevelEditor.h"
 
 FUtilMenuCommands::FUtilMenuCommands()
-	: TCommands<FUtilMenuCommands>(TEXT("HL2AssetImporterPlugin"), NSLOCTEXT("Contexts", "HL2AssetImporterPlugin", "HL2AssetImporterPlugin Plugin"), NAME_None, FEditorStyle::GetStyleSetName())
+	: TCommands<FUtilMenuCommands>(TEXT("HL2AssetImporterPlugin"), NSLOCTEXT("Contexts", "HL2AssetImporterPlugin", "HL2AssetImporterPlugin Plugin"), NAME_None,
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+	FAppStyle::GetAppStyleSetName()
+#else
+	FEditorStyle::GetStyleSetName()
+#endif
+)
 {
 
 }

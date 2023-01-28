@@ -48,7 +48,7 @@ void FEntityEmitter::GenerateActors(const TArrayView<FHL2EntityData>& entityData
 {
 	const FHL2EditorBSPConfig& bspConfig = IHL2Editor::Get().GetConfig().BSP;
 
-	const FFolder entitiesFolder(bspConfig.Portable ? fnEntities : fnHL2Entities);
+	FName entitiesFolder(bspConfig.Portable ? fnEntities : fnHL2Entities);
 	FActorFolders& folders = FActorFolders::Get();
 	folders.CreateFolder(*world, entitiesFolder);
 

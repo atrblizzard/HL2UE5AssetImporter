@@ -195,7 +195,11 @@ bool FMaterialUtils::SetFromVMT(UMaterialInstanceConstant* mtl, const UValveDocu
 					staticSwitchParam.bOverride = true;
 					staticSwitchParam.ParameterInfo = info;
 					staticSwitchParam.Value = true;
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+					staticParamSet.EditorOnly.StaticSwitchParameters.Add(staticSwitchParam);
+#else
 					staticParamSet.StaticSwitchParameters.Add(staticSwitchParam);
+#endif
 				}
 				mtl->SetTextureParameterValueEditorOnly(info, texture);
 			}
@@ -287,7 +291,11 @@ void FMaterialUtils::ProcessVMTNode(
 				staticSwitchParam.bOverride = true;
 				staticSwitchParam.ParameterInfo = info;
 				staticSwitchParam.Value = true;
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+				staticParamSet.EditorOnly.StaticSwitchParameters.Add(staticSwitchParam);
+#else
 				staticParamSet.StaticSwitchParameters.Add(staticSwitchParam);
+#endif
 			}
 		}
 		// Static switch
@@ -297,7 +305,11 @@ void FMaterialUtils::ProcessVMTNode(
 			staticSwitchParam.bOverride = true;
 			staticSwitchParam.ParameterInfo = info;
 			staticSwitchParam.Value = value.ToBool();
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+			staticParamSet.EditorOnly.StaticSwitchParameters.Add(staticSwitchParam);
+#else
 			staticParamSet.StaticSwitchParameters.Add(staticSwitchParam);
+#endif
 		}
 		// Vector
 		else if (GetMaterialParameterByKey(vectorParams, key, info))
@@ -468,10 +480,8 @@ bool FMaterialUtils::ParseIntVec3(const FString& value, FIntVector& out)
 		out.Z = FCString::Atoi(*matchIntVector.GetCaptureGroup(3));
 		return true;
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 bool FMaterialUtils::ParseIntVec3(const FString& value, FVector3f& out)

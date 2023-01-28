@@ -90,7 +90,7 @@ bool FBSPImporter::ImportGeometryToWorld(UWorld* targetWorld)
 {
 	world = targetWorld;
 
-	const FFolder geometryFolder(TEXT("HL2Geometry"));
+	const wchar_t* geometryFolder(TEXT("HL2Geometry"));
 	UE_LOG(LogHL2BSPImporter, Log, TEXT("Importing geometry..."));
 	FActorFolders& folders = FActorFolders::Get();
 	folders.CreateFolder(*world, geometryFolder);
@@ -128,7 +128,7 @@ bool FBSPImporter::ImportEntitiesToWorld(UWorld* targetWorld)
 {
 	world = targetWorld;
 
-	const FFolder entitiesFolder(TEXT("HL2Entities"));
+	const wchar_t* entitiesFolder(TEXT("HL2Entities"));
 	UE_LOG(LogHL2BSPImporter, Log, TEXT("Importing entities..."));
 
 	// Read entities lump

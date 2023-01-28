@@ -83,14 +83,19 @@ UObject* UMP3SoundFactory::FactoryCreateBinary(UClass* Class, UObject* InParent,
 	//actual decoding
 	Decoder.Decode(RawWavBuffer);
 
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+	Sound->RawData.UpdatePayload(FSharedBuffer::Clone(RawWavBuffer.GetData(), RawWavBuffer.Num()));
+	RawWavBuffer.Empty();
+#else
 	Sound->RawData.Lock(LOCK_READ_WRITE);
 	void* LockedData = Sound->RawData.Realloc(RawWavBuffer.Num() * RawWavBuffer.GetTypeSize());
 	FMemory::Memcpy(LockedData, RawWavBuffer.GetData(), RawWavBuffer.Num() * RawWavBuffer.GetTypeSize());
 	Sound->RawData.Unlock();
 	RawWavBuffer.Empty();
+#endif
 
 	// Calculate duration.
-	Sound->Duration = (float)Decoder.GetSizeInBytes() / Decoder.GetSampleRate() / Decoder.GetChannels() / (FMP3Decoder::BitsPerSample / 8);
+	Sound->Duration = static_cast<float>(Decoder.GetSizeInBytes()) / Decoder.GetSampleRate() / Decoder.GetChannels() / (FMP3Decoder::BitsPerSample / 8);
 	Sound->SetSampleRate(Decoder.GetSampleRate());
 	Sound->NumChannels = Decoder.GetChannels();
 	Sound->RawPCMDataSize = Decoder.GetSizeInBytes();
@@ -114,8 +119,7 @@ UObject* UMP3SoundFactory::FactoryCreateBinary(UClass* Class, UObject* InParent,
 
 bool UMP3SoundFactory::CanReimport(UObject* Obj, TArray<FString>& OutFilenames)
 {
-	USoundWave* SoundWave = Cast<USoundWave>(Obj);
-	if (SoundWave)
+	if (const USoundWave* SoundWave = Cast<USoundWave>(Obj))
 	{
 		SoundWave->AssetImportData->ExtractFilenames(OutFilenames);
 		return true;
@@ -125,8 +129,7 @@ bool UMP3SoundFactory::CanReimport(UObject* Obj, TArray<FString>& OutFilenames)
 
 void UMP3SoundFactory::SetReimportPaths(UObject* Obj, const TArray<FString>& NewReimportPaths)
 {
-	USoundWave* SoundWave = Cast<USoundWave>(Obj);
-	if (SoundWave)
+	if (const USoundWave* SoundWave = Cast<USoundWave>(Obj))
 	{
 		SoundWave->AssetImportData->UpdateFilenameOnly(NewReimportPaths[0]);
 	}
@@ -139,7 +142,7 @@ EReimportResult::Type UMP3SoundFactory::Reimport(UObject* Obj)
 		return EReimportResult::Failed;
 	}
 
-	USoundWave* SoundWave = Cast<USoundWave>(Obj);
+	const USoundWave* SoundWave = Cast<USoundWave>(Obj);
 
 	const FString Filename = SoundWave->AssetImportData->GetFirstFilename();
 	const FString FileExtension = FPaths::GetExtension(Filename);
