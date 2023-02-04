@@ -21,6 +21,11 @@
 #include "IMeshBuilderModule.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "IHL2Editor.h"
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+#include "AssetRegistry/AssetRegistryModule.h"
+#else
+#include "AssetRegistryModule.h"
+#endif
 
 DEFINE_LOG_CATEGORY(LogMDLFactory);
 
@@ -73,10 +78,10 @@ UObject* UMDLFactory::FactoryCreateFile(
 
 	if (ScriptFactoryCreateFile(task))
 	{
-		return task->Result[0];
+		return task->GetObjects()[0];
 	}
 
-	FString fileExt = FPaths::GetExtension(filename);
+	const FString FileExt = FPaths::GetExtension(filename);
 
 	// load as binary
 	TArray<uint8> data;
@@ -90,10 +95,10 @@ UObject* UMDLFactory::FactoryCreateFile(
 	ParseParms(parms);
 	const uint8* buffer = &data[0];
 
-	GEditor->GetEditorSubsystem<UImportSubsystem>()->BroadcastAssetPreImport(this, inClass, inParent, inName, *fileExt);
+	GEditor->GetEditorSubsystem<UImportSubsystem>()->BroadcastAssetPreImport(this, inClass, inParent, inName, *FileExt);
 
 	FString path = FPaths::GetPath(filename);
-	FImportedMDL result = ImportStudioModel(inClass, inParent, inName, flags, *fileExt, buffer, buffer + data.Num(), path, warn);
+	FImportedMDL result = ImportStudioModel(inClass, inParent, inName, flags, *FileExt, buffer, buffer + data.Num(), path, warn);
 
 	if (!result.StaticMesh && !result.SkeletalMesh)
 	{
@@ -127,7 +132,10 @@ UObject* UMDLFactory::FactoryCreateFile(
 		animSequence->PostEditChange();
 	}
 	
-	return result.StaticMesh != nullptr ? (UObject*)result.StaticMesh : (UObject*)result.SkeletalMesh;
+	if (result.StaticMesh != nullptr)
+		return result.StaticMesh;
+
+	return result.SkeletalMesh;
 }
 
 /** Returns whether or not the given class is supported by this factory. */
@@ -142,7 +150,7 @@ bool UMDLFactory::DoesSupportClass(UClass* Class)
 /** Returns true if this factory can deal with the file sent in. */
 bool UMDLFactory::FactoryCanImport(const FString& Filename)
 {
-	FString Extension = FPaths::GetExtension(Filename);
+	const FString Extension = FPaths::GetExtension(Filename);
 	return Extension.Compare("mdl", ESearchCase::IgnoreCase) == 0;
 }
 
@@ -260,7 +268,7 @@ FImportedMDL UMDLFactory::ImportStudioModel(UClass* inClass, UObject* inParent, 
 		warn->Logf(ELogVerbosity::Error, TEXT("ImportStudioModel: Could not find vvd file"));
 		return result;
 	}
-	const Valve::VVD::vertexFileHeader_t& vvdHeader = *((Valve::VVD::vertexFileHeader_t*)&vvdData[0]);
+	const Valve::VVD::vertexFileHeader_t& vvdHeader = *(Valve::VVD::vertexFileHeader_t*)&vvdData[0];
 	if (vvdHeader.version != 4)
 	{
 		warn->Logf(ELogVerbosity::Error, TEXT("ImportStudioModel: VVD Header has invalid version (expecting 4, got %d)"), vvdHeader.version);
@@ -331,7 +339,9 @@ FImportedMDL UMDLFactory::ImportStudioModel(UClass* inClass, UObject* inParent, 
 	physAssetPackagePath.Append(TEXT("_physics"));
 	const FName physAssetPackageName(*(FPaths::GetBaseFilename(physAssetPackagePath)));
 	UPackage* physAssetPackage = phyHeader != nullptr ? CreatePackage(*physAssetPackagePath) : nullptr;
-	result.SkeletalMesh = ImportSkeletalMesh(inParent, inName, skeletonPackage, skeletonPackageName, physAssetPackage, physAssetPackageName, flags, header, vtxHeader, vvdHeader, phyHeader, warn);
+	result.SkeletalMesh = ImportSkeletalMesh(inParent, inName, skeletonPackage, skeletonPackageName, physAssetPackage,
+	                                         physAssetPackageName, flags, header, vtxHeader, vvdHeader, phyHeader,
+	                                         warn);
 	if (result.SkeletalMesh == nullptr)
 	{
 		warn->Logf(ELogVerbosity::Error, TEXT("ImportStudioModel: Failed to import skeletal mesh"));
@@ -377,7 +387,8 @@ FImportedMDL UMDLFactory::ImportStudioModel(UClass* inClass, UObject* inParent, 
 	return result;
 }
 
-void UMDLFactory::ImportInclude(UObject* inParent, const Valve::MDL::mstudiomodelgroup_t& include, const FString& basePath, FImportedMDL& result, FFeedbackContext* warn)
+void UMDLFactory::ImportInclude(const UObject* inParent, const Valve::MDL::mstudiomodelgroup_t& include,
+                                const FString& basePath, FImportedMDL& result, FFeedbackContext* warn)
 {
 	const FString includeName = include.GetName();
 	const FString fileExt = FPaths::GetExtension(includeName);
@@ -774,7 +785,7 @@ UStaticMesh* UMDLFactory::ImportStaticMesh
 
 	// Create model data
 	UHL2ModelData* modelData;
-	if (!IHL2Editor::Get().GetConfig().Model.Portable)
+	if (!IHL2Editor::Get().GetConfig()->Config.Model.Portable)
 	{
 		modelData = NewObject<UHL2ModelData>(staticMesh);
 		modelData->Bodygroups = bodygroups;
@@ -1047,7 +1058,7 @@ USkeletalMesh* UMDLFactory::ImportSkeletalMesh
 
 	// Create model data
 	UHL2ModelData* modelData;
-	if (!IHL2Editor::Get().GetConfig().Model.Portable)
+	if (!IHL2Editor::Get().GetConfig()->Config.Model.Portable)
 	{
 		modelData = NewObject<UHL2ModelData>(skeletalMesh);
 		skeletalMesh->AddAssetUserData(modelData);

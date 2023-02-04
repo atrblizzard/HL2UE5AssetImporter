@@ -30,6 +30,11 @@ const FName fnAmbientLightColor(TEXT("_ambient"));
 const FName fnAssetRegistry(TEXT("AssetRegistry"));
 const FName fnEntities(TEXT("Entities"));
 const FName fnHL2Entities(TEXT("HL2Entities"));
+#ifdef VAMPIRE
+const FName fnVampireEntities(TEXT("VampireEntities"));
+const FName fnPropHacking(TEXT("prop_hacking"));
+const FName fnItemContainerAnimated(TEXT("item_container_animated"));
+#endif
 
 FEntityEmitter::FEntityEmitter(UWorld* world, const Valve::BSPFile& bspFile, const TArray<UStaticMesh*>& bspModels, AVBSPInfo* vbspInfo)
 	: world(world), bspFile(bspFile), bspModels(bspModels), vbspInfo(vbspInfo)
@@ -42,11 +47,22 @@ FEntityEmitter::FEntityEmitter(UWorld* world, const Valve::BSPFile& bspFile, con
 	portableEntityImporters.Add(fnLightEnv, [&](const FHL2EntityData& entityData) { return ImportPortableLight(entityData); });
 	portableEntityImporters.Add(fnLight, [&](const FHL2EntityData& entityData) { return ImportPortableLight(entityData); });
 	portableEntityImporters.Add(fnLightSpot, [&](const FHL2EntityData& entityData) { return ImportPortableLight(entityData); });
+
+#ifdef VAMPIRE
+	portableEntityImporters.Add(fnPropHacking, [&](const FHL2EntityData& entityData) { return ImportPortableProp(entityData); });
+	portableEntityImporters.Add(fnItemContainerAnimated, [&](const FHL2EntityData& entityData) { return ImportPortableProp(entityData); });
+	portableEntityImporters.Add(TEXT("item_container_lock"), [&](const FHL2EntityData& entityData) { return ImportPortableProp(entityData); });
+	portableEntityImporters.Add(TEXT("prop_switch"), [&](const FHL2EntityData& entityData) { return ImportPortableProp(entityData); });
+	portableEntityImporters.Add(TEXT("sign_data"), [&](const FHL2EntityData& entityData) { return ImportPortableProp(entityData); });
+	portableEntityImporters.Add(TEXT("sign"), [&](const FHL2EntityData& entityData) { return ImportPortableProp(entityData); });
+	portableEntityImporters.Add(TEXT("prop_doorknob"), [&](const FHL2EntityData& entityData) { return ImportPortableProp(entityData); });
+	portableEntityImporters.Add(TEXT("prop_doorknob_electronic"), [&](const FHL2EntityData& entityData) { return ImportPortableProp(entityData); });
+#endif
 }
 
 void FEntityEmitter::GenerateActors(const TArrayView<FHL2EntityData>& entityDatas, FScopedSlowTask* progress)
 {
-	const FHL2EditorBSPConfig& bspConfig = IHL2Editor::Get().GetConfig().BSP;
+	const FHL2EditorBSPConfig& bspConfig = IHL2Editor::Get().GetConfig()->Config.BSP;
 
 	FName entitiesFolder(bspConfig.Portable ? fnEntities : fnHL2Entities);
 	FActorFolders& folders = FActorFolders::Get();

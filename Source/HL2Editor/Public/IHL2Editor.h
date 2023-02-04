@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Modules/ModuleManager.h"
-#include "HL2EditorConfig.h"
+#include "HL2EditorDeveloperSettings.h"
 
 class HL2EDITOR_API IHL2Editor : public IModuleInterface
 {
@@ -28,6 +28,5 @@ public:
 		return FModuleManager::Get().IsModuleLoaded("HL2Editor");
 	}
 
-	virtual const FHL2EditorConfig& GetConfig() const = 0;
-
+	virtual UHL2EditorDeveloperSettings* GetConfig() const = 0;
 };

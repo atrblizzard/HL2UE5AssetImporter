@@ -6,6 +6,7 @@
 #include "HL2EntityData.h"
 #include "EntityParser.h"
 #include "BaseEntity.h"
+#include "BSPBrushUtils.h"
 #include "VBSPInfo.h"
 #include "HL2EditorConfig.h"
 
@@ -78,7 +79,7 @@ private:
 
 	AStaticMeshActor* RenderBrushesToCollisionActor(const TArray<uint16>& brushIndices, const FString& assetName, FName editorMaterial);
 
-	void ProcessBrush(uint16 brushIndex, bool closeGeometry, int rejectedSurfFlags, FBSPBrush& outBSPBrush);
+	void ProcessBrush(uint16 brushIndex, bool closeGeometry, int rejectedSurfFlags, FBSPBrush& outBSPBrush) const;
 
 	float FindFaceArea(const Valve::BSP::dface_t& bspFace, bool unrealCoordSpace = true);
 
@@ -89,5 +90,4 @@ private:
 	static FString ParseMaterialName(const char* bspMaterialName);
 	
 	static bool SharesSmoothingGroup(uint16 groupA, uint16 groupB);
-
 };

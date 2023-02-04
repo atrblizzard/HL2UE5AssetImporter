@@ -4,6 +4,7 @@
 #include "Runtime/Core/Public/Misc/FeedbackContext.h"
 #include "ValveKeyValues.h"
 #include "IHL2Editor.h"
+#include "EditorFramework/AssetImportData.h"
 
 UVMTFactory::UVMTFactory()
 {
@@ -85,7 +86,7 @@ bool UVMTFactory::FactoryCanImport(const FString& Filename)
 
 UMaterialInterface* UVMTFactory::CreateMaterial(UObject* InParent, FName Name, EObjectFlags Flags)
 {
-	UClass* materialClass = IHL2Editor::Get().GetConfig().Material.Portable ? UMaterialInstanceConstant::StaticClass() : UVMTMaterial::StaticClass();
+	UClass* materialClass = IHL2Editor::Get().GetConfig()->Config.Material.Portable ? UMaterialInstanceConstant::StaticClass() : UVMTMaterial::StaticClass();
 	UObject* newObject = CreateOrOverwriteAsset(materialClass, InParent, Name, Flags);
 	UMaterialInterface* newMaterial = nullptr;
 	if (newObject)
@@ -102,8 +103,8 @@ UMaterialInterface* UVMTFactory::ImportMaterial(UClass* Class, UObject* InParent
 	const FString text(BufferEnd - Buffer, Buffer);
 
 	// Parse to a document
-	UValveDocument* document = UValveDocument::Parse(text, this);
-	if (document == nullptr)
+	UValveDocument* Document = UValveDocument::Parse(text, this);
+	if (Document == nullptr)
 	{
 		Warn->Logf(ELogVerbosity::Error, TEXT("Failed to parse VMT"));
 		return nullptr;
@@ -113,14 +114,14 @@ UMaterialInterface* UVMTFactory::ImportMaterial(UClass* Class, UObject* InParent
 	UMaterialInterface* material = CreateMaterial(InParent, Name, Flags);
 
 	// Attempt to import it
-	if (!FMaterialUtils::SetFromVMT(CastChecked<UMaterialInstanceConstant>(material), document))
+	if (!FMaterialUtils::SetFromVMT(CastChecked<UMaterialInstanceConstant>(material), Document))
 	{
 		//Warn->Logf(ELogVerbosity::Error, TEXT("Failed to import VMT"));
 		//return nullptr;
 	}
 
 	// Clean up
-	document->MarkAsGarbage();
+	Document->MarkAsGarbage();
 
 	return material;
 }

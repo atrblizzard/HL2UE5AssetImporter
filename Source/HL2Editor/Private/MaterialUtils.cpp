@@ -14,10 +14,18 @@ bool FMaterialUtils::SetFromVMT(UMaterialInstanceConstant* mtl, const UValveDocu
 
 	const UValveGroupValue* rootGroupValue = CastChecked<UValveGroupValue>(document->Root);
 	check(rootGroupValue->Items.Num() == 1);
+
+	if (rootGroupValue == nullptr)
+	{
+		UE_LOG(LogHL2Editor, Warning, TEXT("UValveGroupValue is NULL, probably corrupted VMT."));
+		return false;
+	}
+
 	FString shaderName = rootGroupValue->Items[0].Key.ToString();
 	const UValveGroupValue* groupValue = CastChecked<UValveGroupValue>(rootGroupValue->Items[0].Value);
 	UVMTMaterial* vmtMaterial = Cast<UVMTMaterial>(mtl);
-	const FHL2EditorMaterialConfig& config = IHL2Editor::Get().GetConfig().Material;
+
+	const FHL2EditorMaterialConfig& config = IHL2Editor::Get().GetEditorConfig()->Config.Material;
 	const FAssetRegistryModule& assetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	const IAssetRegistry& assetRegistry = assetRegistryModule.Get();
 

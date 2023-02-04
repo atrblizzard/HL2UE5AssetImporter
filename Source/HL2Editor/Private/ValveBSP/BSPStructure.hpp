@@ -249,7 +249,6 @@ namespace Valve { namespace BSP {
 		unsigned char		m_NeighborSpan;				// Where we fit onto our neighbor.
 	};
 
-
 	// NOTE: see the section above titled "displacement neighbor rules".
 	class CDispNeighbor
 	{

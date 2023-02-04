@@ -30,6 +30,8 @@ void HL2EditorImpl::StartupModule()
 	check(vtfLibDllHandle);
 	mpg123DllHandle = FPlatformProcess::GetDllHandle(*GetMPG123LibDllPath());
 	check(mpg123DllHandle);
+	lzmaDllHandle = FPlatformProcess::GetDllHandle(*GetLZMALibDllPath());
+	check(lzmaDllHandle);
 
 	FUtilMenuStyle::Initialize();
 
@@ -83,7 +85,7 @@ void HL2EditorImpl::StartupModule()
 	);
 
 	myExtender = MakeShareable(new FExtender);
-	myExtender->AddToolBarExtension("Content", EExtensionHook::After, NULL, FToolBarExtensionDelegate::CreateRaw(this, &HL2EditorImpl::AddToolbarExtension));
+	myExtender->AddToolBarExtension("Content", EExtensionHook::After, nullptr, FToolBarExtensionDelegate::CreateRaw(this, &HL2EditorImpl::AddToolbarExtension));
 
 	FLevelEditorModule& levelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 	levelEditorModule.GetToolBarExtensibilityManager()->AddExtender(myExtender);
@@ -101,14 +103,14 @@ void HL2EditorImpl::ShutdownModule()
 	FPlatformProcess::FreeDllHandle(vtfLibDllHandle);
 }
 
-const FHL2EditorConfig& HL2EditorImpl::GetConfig() const
+UHL2EditorDeveloperSettings* HL2EditorImpl::GetConfig() const
 {
-	return editorConfig;
+	return Settings;
 }
 
-void HL2EditorImpl::AddToolbarExtension(FToolBarBuilder& builder)
+void HL2EditorImpl::AddToolbarExtension(FToolBarBuilder& builder) const
 {
-	FUIAction UtilMenuAction;
+	const FUIAction UtilMenuAction;
 
 	builder.AddComboButton(
 		UtilMenuAction,
@@ -156,7 +158,8 @@ void HL2EditorImpl::BulkImportTexturesClicked()
 	IDesktopPlatform* desktopPlatform = FDesktopPlatformModule::Get();
 	FString rootPath;
 	if (!desktopPlatform->OpenDirectoryDialog(nullptr, TEXT("Choose VTF Location"), TEXT(""), rootPath)) { return; }
-	rootPath += "/";
+
+	Settings->OverrideImportRootPath ? rootPath += "/" : rootPath = Settings->ImportRootPath + "/materials/";
 
 	// Scan folder
 	IPlatformFile& platformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -165,7 +168,7 @@ void HL2EditorImpl::BulkImportTexturesClicked()
 	UE_LOG(LogHL2Editor, Log, TEXT("Importing %d files from '%s'..."), filesToImport.Num(), *rootPath);
 
 	// Import all
-	IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
+	const IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
 	TMap<FString, TArray<FString>> groupedFilesToImport;
 	GroupFileListByDirectory(filesToImport, groupedFilesToImport);
 	FScopedSlowTask loopProgress(groupedFilesToImport.Num(), LOCTEXT("TexturesImporting", "Importing VTFs..."));
@@ -193,7 +196,7 @@ void HL2EditorImpl::BulkImportMaterialsClicked()
 	IDesktopPlatform* desktopPlatform = FDesktopPlatformModule::Get();
 	FString rootPath;
 	if (!desktopPlatform->OpenDirectoryDialog(nullptr, TEXT("Choose VMT Location"), TEXT(""), rootPath)) { return; }
-	rootPath += "/";
+	Settings->OverrideImportRootPath ? rootPath += "/" : rootPath = Settings->ImportRootPath + "/materials/";
 
 	// Scan folder
 	IPlatformFile& platformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -202,7 +205,7 @@ void HL2EditorImpl::BulkImportMaterialsClicked()
 	UE_LOG(LogHL2Editor, Log, TEXT("Importing %d files from '%s'..."), filesToImport.Num(), *rootPath);
 
 	// Import all
-	IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
+	const IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
 	TMap<FString, TArray<FString>> groupedFilesToImport;
 	GroupFileListByDirectory(filesToImport, groupedFilesToImport);
 	FScopedSlowTask loopProgress(groupedFilesToImport.Num(), LOCTEXT("MaterialsImporting", "Importing VMTs..."));
@@ -231,7 +234,7 @@ void HL2EditorImpl::BulkImportModelsClicked()
 	IDesktopPlatform* desktopPlatform = FDesktopPlatformModule::Get();
 	FString rootPath;
 	if (!desktopPlatform->OpenDirectoryDialog(nullptr, TEXT("Choose MDL Location"), TEXT(""), rootPath)) { return; }
-	rootPath += "/";
+	Settings->OverrideImportRootPath ? rootPath += "/" : rootPath = Settings->ImportRootPath + "/models/";
 
 	// Scan folder
 	IPlatformFile& platformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -248,7 +251,7 @@ void HL2EditorImpl::BulkImportModelsClicked()
 		});
 
 	// Import all
-	IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
+	const IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
 	TMap<FString, TArray<FString>> groupedFilesToImport;
 	GroupFileListByDirectory(filesToImport, groupedFilesToImport);
 	FScopedSlowTask loopProgress(groupedFilesToImport.Num(), LOCTEXT("ModelsImporting", "Importing mdls..."));
@@ -275,7 +278,7 @@ void HL2EditorImpl::BulkImportSoundsClicked()
 	IDesktopPlatform* desktopPlatform = FDesktopPlatformModule::Get();
 	FString rootPath;
 	if (!desktopPlatform->OpenDirectoryDialog(nullptr, TEXT("Choose Sound Location"), TEXT(""), rootPath)) { return; }
-	rootPath += "/";
+	Settings->OverrideImportRootPath ? rootPath += "/" : rootPath = Settings->ImportRootPath + "/sound/";
 
 	// Scan folder
 	IPlatformFile& platformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -285,7 +288,7 @@ void HL2EditorImpl::BulkImportSoundsClicked()
 	UE_LOG(LogHL2Editor, Log, TEXT("Importing %d files from '%s'..."), filesToImport.Num(), *rootPath);
 
 	// Import all
-	IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
+	const IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
 	TMap<FString, TArray<FString>> groupedFilesToImport;
 	GroupFileListByDirectory(filesToImport, groupedFilesToImport);
 	FScopedSlowTask loopProgress(groupedFilesToImport.Num(), LOCTEXT("SoundsImporting", "Importing wavs/mp3s..."));
@@ -312,6 +315,7 @@ void HL2EditorImpl::ImportScriptsClicked()
 	IDesktopPlatform* desktopPlatform = FDesktopPlatformModule::Get();
 	FString rootPath;
 	if (!desktopPlatform->OpenDirectoryDialog(nullptr, TEXT("Choose Scripts Location"), TEXT(""), rootPath)) { return; }
+	Settings->OverrideImportRootPath ? rootPath += "/" : rootPath = Settings->ImportRootPath + "/scripts/";
 
 	IAssetTools& assetTools = FAssetToolsModule::GetModule().Get();
 	FScopedSlowTask loopProgress(2, LOCTEXT("ScriptsImporting", "Importing scripts..."));
@@ -472,16 +476,15 @@ void HL2EditorImpl::TraceTerrainClicked()
 	}
 }
 
-void HL2EditorImpl::SaveImportedAssets(TArrayView<UObject*> importedObjects)
+void HL2EditorImpl::SaveImportedAssets(TArrayView<UObject*> importedObjects) const
 {
-	for (UObject* obj : importedObjects)
+	for (const UObject* obj : importedObjects)
 	{
 		UPackage* package = CastChecked<UPackage>(obj->GetOuter());
 		FString filename;
 		if (!FPackageName::TryConvertLongPackageNameToFilename(package->GetName(), filename, FPackageName::GetAssetPackageExtension())) { continue; }
-		
-		bool savedPackage = SavePackageHelper(package, filename, RF_Standalone, GWarn, SAVE_KeepGUID);
-		if (savedPackage)
+
+		if (SavePackageHelper(package, filename, RF_Standalone, GWarn, SAVE_KeepGUID))
 		{
 			UE_LOG(LogHL2Editor, Log, TEXT("Correctly saved:  [%s]."), *filename);
 		}

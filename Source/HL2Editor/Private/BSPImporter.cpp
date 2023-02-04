@@ -260,7 +260,7 @@ bool FBSPImporter::ImportEntitiesToWorld(UWorld* targetWorld)
 
 void FBSPImporter::RenderModelToActors(TArray<AStaticMeshActor*>& out, uint32 modelIndex)
 {
-	const FHL2EditorBSPConfig& bspConfig = IHL2Editor::Get().GetConfig().BSP;
+	const FHL2EditorBSPConfig& bspConfig = IHL2Editor::Get().GetConfig()->Config.BSP;
 
 	const Valve::BSP::dmodel_t& bspModel = bspFile.m_Models[modelIndex];
 
@@ -1336,7 +1336,7 @@ AStaticMeshActor* FBSPImporter::RenderBrushesToCollisionActor(const TArray<uint1
 	return staticMeshActor;
 }
 
-void FBSPImporter::ProcessBrush(uint16 brushIndex, bool closeGeometry, int rejectedSurfFlags, FBSPBrush& outBSPBrush)
+void FBSPImporter::ProcessBrush(uint16 brushIndex, bool closeGeometry, int rejectedSurfFlags, FBSPBrush& outBSPBrush) const
 {
 	static const FName fnBlack("tools/toolsblack");
 	const Valve::BSP::dbrush_t& bspBrush = bspFile.m_Brushes[brushIndex];
@@ -1388,7 +1388,7 @@ float FBSPImporter::FindFaceArea(const Valve::BSP::dface_t& bspFace, bool unreal
 	TArray<FVector3f> vertices;
 	for (int i = 0; i < bspFace.m_Numedges; ++i)
 	{
-		const int32 surfEdge = bspFile.m_Surfedges[bspFace.m_Firstedge + i];
+		const int32 surfEdge = bspFile.m_Surfedges[bspFace.m_Firstedge + static_cast<std::vector<int, std::allocator<int>>::size_type>(i)];
 		const uint32 edgeIndex = (uint32)(surfEdge < 0 ? -surfEdge : surfEdge);
 		const Valve::BSP::dedge_t& bspEdge = bspFile.m_Edges[edgeIndex];
 		const uint16 vertIndex = surfEdge < 0 ? bspEdge.m_V[1] : bspEdge.m_V[0];
