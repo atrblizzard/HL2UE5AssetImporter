@@ -349,16 +349,19 @@ void FBSPImporter::RenderModelToActors(TArray<AStaticMeshActor*>& out, uint32 mo
 
 	if (modelIndex == 0)
 	{
-		progress.EnterProgressFrame(1.0f, LOCTEXT("MapGeometryImporting_DETAIL", "Generating detail prop geometry..."));
+		if (!IHL2Editor::Get().GetConfig()->Config.BSP.ImportDetailProps)
+		{
+			progress.EnterProgressFrame(1.0f, LOCTEXT("MapGeometryImporting_DETAIL", "Generating detail prop geometry..."));
 
-		// Render detail props to a single mesh
-		FMeshDescription meshDesc;
-		FStaticMeshAttributes staticMeshAttr(meshDesc);
-		staticMeshAttr.Register();
-		staticMeshAttr.RegisterTriangleNormalAndTangentAttributes();
-		RenderDetailPropsToMesh(meshDesc);
+			// Render detail props to a single mesh
+			FMeshDescription meshDesc;
+			FStaticMeshAttributes staticMeshAttr(meshDesc);
+			staticMeshAttr.Register();
+			staticMeshAttr.RegisterTriangleNormalAndTangentAttributes();
+			RenderDetailPropsToMesh(meshDesc);
 
-		RenderCellsToActors(meshDesc, TEXT("Detail"), bspConfig.DetailPropCells, false, false, out);
+			RenderCellsToActors(meshDesc, TEXT("Detail"), bspConfig.DetailPropCells, false, false, out);
+		}
 	}
 
 	{

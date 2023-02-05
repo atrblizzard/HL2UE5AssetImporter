@@ -25,7 +25,7 @@ bool FMaterialUtils::SetFromVMT(UMaterialInstanceConstant* mtl, const UValveDocu
 	const UValveGroupValue* groupValue = CastChecked<UValveGroupValue>(rootGroupValue->Items[0].Value);
 	UVMTMaterial* vmtMaterial = Cast<UVMTMaterial>(mtl);
 
-	const FHL2EditorMaterialConfig& config = IHL2Editor::Get().GetEditorConfig()->Config.Material;
+	const FHL2EditorMaterialConfig& config = IHL2Editor::Get().GetConfig()->Config.Material;
 	const FAssetRegistryModule& assetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	const IAssetRegistry& assetRegistry = assetRegistryModule.Get();
 

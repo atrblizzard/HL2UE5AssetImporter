@@ -1,4 +1,4 @@
-# Haff-Life 2 Unreal Engine 5.1 Asset Importer
+# Half-Life 2/Source to Unreal Engine 5.1 Asset Importer
 
 A WIP Unreal Engine 5.1 plugin that adds support for importing various Source engine file format, with a long-term goal of being able to import the entirety of Half-Life 2 into the UE5 editor and play through the full game.
 

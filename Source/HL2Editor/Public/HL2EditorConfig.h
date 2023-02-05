@@ -45,6 +45,12 @@ struct FHL2EditorBSPConfig
 	// This is helpful if you're just using the plugin to import map geometry and basic entities without caring about functionality.
 	UPROPERTY(EditAnywhere)
 	bool Portable = false;
+
+	UPROPERTY(EditAnywhere, DisplayName = "Import detail objects", Category = Details)
+	bool ImportDetailObjects = true;
+	
+	UPROPERTY(EditAnywhere, DisplayName = "Import detail props", Category = Details)
+	bool ImportDetailProps = true;
 };
 
 USTRUCT(BlueprintType)

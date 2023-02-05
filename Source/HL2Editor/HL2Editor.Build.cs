@@ -15,7 +15,8 @@ public class HL2Editor : ModuleRules
             "MeshDescription", "StaticMeshDescription", "MeshUtilitiesCommon", "MeshDescriptionOperations",
             "Landscape", "Foliage", "BSPUtils",
             "HL2Runtime", "VTFLib", "MPG123",
-            "DeveloperSettings"
+            "DeveloperSettings",
+            "LZMA"
         });
     }
 }

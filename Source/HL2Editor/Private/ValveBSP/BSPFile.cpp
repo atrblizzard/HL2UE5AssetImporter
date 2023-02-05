@@ -1,5 +1,7 @@
 #include "BSPFile.hpp"
+#include "IHL2Editor.h"
 #include <iostream>
+
 using namespace Valve;
 using namespace BSP;
 
@@ -298,8 +300,7 @@ BSP::dgamelump_t BSPFile::get_game_lump( const BSP::eGamelumpIndex gamelump_inde
 bool BSPFile::parse_gamelumps( std::ifstream& bsp_binary )
 {
 	try {
-		
-		auto& lump = m_BSPHeader.m_Lumps.at(static_cast<size_t>(LUMP_GAME_LUMP));
+		const auto& lump = m_BSPHeader.m_Lumps.at(LUMP_GAME_LUMP);
 		const auto lump_size = lump.m_Filelen;
 		if (!lump_size) {
 			return true;
@@ -307,7 +308,7 @@ bool BSPFile::parse_gamelumps( std::ifstream& bsp_binary )
 
 		int numGameLumps;
 		bsp_binary.seekg( lump.m_Fileofs );
-		bsp_binary.read( (char*)&numGameLumps, sizeof(int) );
+		bsp_binary.read( reinterpret_cast<char*>(&numGameLumps), sizeof(int) );
 
 		m_Gamelumps = std::vector< dgamelump_t >( numGameLumps );
 		bsp_binary.read( reinterpret_cast< char* >( m_Gamelumps.data() ), sizeof( dgamelump_t ) * numGameLumps );
@@ -335,38 +336,38 @@ bool BSPFile::parse_staticprops( std::ifstream& bsp_binary )
 
 		int numDictEntries;
 		bsp_binary.seekg( lump.m_Fileofs );
-		bsp_binary.read( (char*)& numDictEntries, sizeof(int) );
+		bsp_binary.read( reinterpret_cast<char*>(&numDictEntries), sizeof(int) );
 
 		m_StaticpropStringTable = std::vector< StaticPropName_t >( numDictEntries );
 		bsp_binary.read( reinterpret_cast<char*>( m_StaticpropStringTable.data() ), sizeof( StaticPropName_t ) * numDictEntries );
 
 		int numLeafEntries;
-		bsp_binary.read( (char*)& numLeafEntries, sizeof( int ) );
+		bsp_binary.read( reinterpret_cast<char*>(&numLeafEntries), sizeof( int ) );
 
 		bsp_binary.seekg( sizeof( unsigned short ) * numLeafEntries, bsp_binary.cur );
 
 		int numStaticProps;
-		bsp_binary.read( (char*)& numStaticProps, sizeof( int ) );
+		bsp_binary.read( reinterpret_cast<char*>(&numStaticProps), sizeof( int ) );
 
 		switch ( lump.m_Version ) {
 			case 4:
-
 				m_Staticprops_v4 = std::vector< StaticProp_v4_t >( numStaticProps );
 				bsp_binary.read( reinterpret_cast<char*>( m_Staticprops_v4.data() ), sizeof( StaticProp_v4_t ) * numStaticProps );
 
 				break;
-			case 5:
 
+		case 5:
 				m_Staticprops_v5 = std::vector< StaticProp_v5_t >( numStaticProps );
 				bsp_binary.read( reinterpret_cast<char*>( m_Staticprops_v5.data() ), sizeof( StaticProp_v5_t ) * numStaticProps );
 
 				break;
-			case 6:
 
+		case 6:
 				m_Staticprops_v6 = std::vector< StaticProp_v6_t >( numStaticProps );
 				bsp_binary.read( reinterpret_cast<char*>( m_Staticprops_v6.data() ), sizeof( StaticProp_v6_t ) * numStaticProps );
 
 				break;
+
             case 10:
 
                 m_Staticprops_v10 = std::vector< StaticProp_v10_t >(numStaticProps);
@@ -386,38 +387,42 @@ bool BSPFile::parse_staticprops( std::ifstream& bsp_binary )
 
 bool BSPFile::parse_detailprops(std::ifstream& bsp_binary)
 {
-    try {
+    try
+    {
+	    const auto [m_ID, m_Flags, m_Version, m_Fileofs, m_Filelen] =
+	    	get_game_lump(GAMELUMP_DETAILPROPS);
+    	if (m_ID != GAMELUMP_DETAILPROPS) {
+    		return false;
+    	}
+    	const auto lump_size = m_Filelen;
+    	if (!lump_size) {
+    		return true;
+    	}
 
-        auto lump = get_game_lump(GAMELUMP_DETAILPROPS);
-        if (lump.m_ID != GAMELUMP_DETAILPROPS) {
-            return false;
-        }
-        const auto lump_size = lump.m_Filelen;
-        if (!lump_size) {
-            return true;
-        }
+    	// Model dict
+    	int numDictEntries;
+    	bsp_binary.seekg(m_Fileofs);
+    	bsp_binary.read(reinterpret_cast<char*>(&numDictEntries), sizeof(int));
 
-        // Model dict
-        int numDictEntries;
-        bsp_binary.seekg(lump.m_Fileofs);
-        bsp_binary.read((char*)&numDictEntries, sizeof(int));
+    	m_DetailpropsStringTable = std::vector< DetailObjectName_t >(numDictEntries);
+    	bsp_binary.read(reinterpret_cast<char*>(m_DetailpropsStringTable.data()), sizeof(DetailObjectName_t) * numDictEntries);
 
-        m_DetailpropsStringTable = std::vector< DetailObjectName_t >(numDictEntries);
-        bsp_binary.read(reinterpret_cast<char*>(m_DetailpropsStringTable.data()), sizeof(DetailObjectName_t) * numDictEntries);
+    	// Sprite dict
+    	int numDetailSprites;
+    	bsp_binary.read(reinterpret_cast<char*>(&numDetailSprites), sizeof(int));
 
-        // Sprite dict
-        int numDetailSprites;
-        bsp_binary.read((char*)&numDetailSprites, sizeof(int));
+    	m_Detailsprites = std::vector< DetailSpriteDict_t >(numDetailSprites);
+    	bsp_binary.read(reinterpret_cast<char*>(m_Detailsprites.data()), sizeof(DetailSpriteDict_t) * numDetailSprites);
 
-        m_Detailsprites = std::vector< DetailSpriteDict_t >(numDetailSprites);
-        bsp_binary.read(reinterpret_cast<char*>(m_Detailsprites.data()), sizeof(DetailSpriteDict_t) * numDetailSprites);
+    	if (!IHL2Editor::Get().GetConfig()->Config.BSP.ImportDetailObjects)
+    	{
+    		// Detail objects
+    		int numDetailObjects;
+    		bsp_binary.read(reinterpret_cast<char*>(&numDetailObjects), sizeof(int));
 
-        // Detail objects
-        int numDetailObjects;
-        bsp_binary.read((char*)&numDetailObjects, sizeof(int));
-
-        m_Detailobjects = std::vector< DetailObject_t >(numDetailObjects);
-        bsp_binary.read(reinterpret_cast<char*>(m_Detailobjects.data()), sizeof(DetailObject_t) * numDetailObjects);
+    		m_Detailobjects = std::vector< DetailObject_t >(numDetailObjects);
+    		bsp_binary.read(reinterpret_cast<char*>(m_Detailobjects.data()), sizeof(DetailObject_t) * numDetailObjects);
+		}
     }
     catch (const std::exception& e) {
         print_exception("parse_gamelumps", e);
